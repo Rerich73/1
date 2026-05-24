@@ -298,17 +298,17 @@ containers:
 network:
   domains:
     content-domain:
-      host: content.angstrem-mebel.ru
+      host: content.angstrem-mebel.pro
     n8n-domain:
-      host: n8n-content.angstrem-mebel.ru
+      host: n8n-content.angstrem-mebel.pro
     ai-domain:
-      host: ai-content.angstrem-mebel.ru
+      host: ai-content.angstrem-mebel.pro
     llm-domain:
-      host: llm-content.angstrem-mebel.ru
+      host: llm-content.angstrem-mebel.pro
     files-domain:
-      host: files-content.angstrem-mebel.ru
+      host: files-content.angstrem-mebel.pro
     status-domain:
-      host: status-content.angstrem-mebel.ru
+      host: status-content.angstrem-mebel.pro
 
   services:
     directus-service:
