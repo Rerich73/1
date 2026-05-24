@@ -1,4 +1,4 @@
-﻿version: 1
+﻿﻿version: 1
 project: angstrem-content-factory
 description: Стартовый комплект конфигурации для развертывания контент-завода Ангстрем в Dockhost.
 
@@ -188,17 +188,12 @@ containers:
       ADMIN_EMAIL: $DIRECTUS_ADMIN_EMAIL
       ADMIN_PASSWORD: $DIRECTUS_ADMIN_PASSWORD
       PUBLIC_URL: $DIRECTUS_PUBLIC_URL
-      CORS_ENABLED: "true"
-      CORS_ORIGIN: $DIRECTUS_CORS_ORIGIN
       DB_CLIENT: pg
       DB_HOST: cf-postgres
       DB_PORT: "5432"
       DB_DATABASE: $DIRECTUS_DB_NAME
       DB_USER: $DIRECTUS_DB_USER
       DB_PASSWORD: $DIRECTUS_DB_PASSWORD
-      REDIS_ENABLED: "true"
-      REDIS: redis://:$REDIS_PASSWORD@cf-redis:6379
-      WEBSOCKETS_ENABLED: "true"
     volumes:
       - name: directus-uploads
         mountPath: /directus/uploads
