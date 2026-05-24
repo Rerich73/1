@@ -1,6 +1,5 @@
 version: 1
-project:
-  name: angstrem-content-factory
+project:angstrem-content-factory
   description: Стартовый комплект конфигурации для развертывания контент-завода Ангстрем в Dockhost.
 
 environment:
