@@ -41,7 +41,7 @@ environment:
     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     GEMINI_API_KEY: ${GEMINI_API_KEY}
     GIGACHAT_API_KEY: ${GIGACHAT_API_KEY}
-    YANDEXGPT_API_KEY: ${YANDEXGPT_API_KE
+    YANDEXGPT_API_KEY: ${YANDEXGPT_API_KEY}
     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     MINIO_PORT: ${MINIO_PORT}
@@ -367,4 +367,4 @@ network:
       domain: status-domain
       service: uptime-service
       port: 3001
-  
+      path: /
