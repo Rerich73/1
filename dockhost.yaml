@@ -60,44 +60,48 @@ environment:
 
 volumes:
   postgres-data:
-    type: volume
-    size: 10Gi
+    type: ssd
+    size: 10Gib
   redis-data:
-    type: volume
-    size: 2Gi
+    type: ssd
+    size: 2Gib
   minio-data:
-    type: volume
-    size: 20Gi
+    type: ssd
+    size: 20Gib
   qdrant-storage:
-    type: volume
-    size: 10Gi
+    type: ssd
+    size: 10Gib
   directus-uploads:
-    type: volume
-    size: 10Gi
+    type: ssd
+    size: 10Gib
   directus-extensions:
-    type: volume
-    size: 1Gi
+    type: ssd
+    size: 1Gib
   n8n-data:
-    type: volume
-    size: 2Gi
+    type: ssd
+    size: 2Gib
   openwebui-data:
-    type: volume
-    size: 5Gi
+    type: ssd
+    size: 5Gib
   litellm-data:
-    type: volume
-    size: 2Gi
+    type: ssd
+    size: 2Gib
   uptime-kuma-data:
-    type: volume
-    size: 1Gi
+    type: ssd
+    size: 1Gib
   postgres-init:
-    type: volume
-    size: 1Gi
+    type: ssd
+    size: 1Gib
 
 containers:
   cf-postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
+    replicas: 1
+    resources:
+      memory: 1024MiB
+      cpu: 1
+      cpuFraction: 20
+    variables:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -110,53 +114,66 @@ containers:
       LITELLM_DB_NAME: ${LITELLM_DB_NAME}
       LITELLM_DB_USER: ${LITELLM_DB_USER}
       LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD}
-    mounts:
-      - volume: postgres-data
-        target: /var/lib/postgresql/data
-      - volume: postgres-init
-        target: /docker-entrypoint-initdb.d
-        read_only: true
+    volumes:
+      - name: postgres-data
+        mountPath: /var/lib/postgresql/data
+      - name: postgres-init
+        mountPath: /docker-entrypoint-initdb.d
 
   cf-redis:
     image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    mounts:
-      - volume: redis-data
-        target: /data
+    replicas: 1
+    resources:
+      memory: 256MiB
+      cpu: 1
+      cpuFraction: 20
+    cmd: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - name: redis-data
+        mountPath: /data
 
   cf-minio:
     image: minio/minio:latest
-    restart: unless-stopped
-    command: ["server", "/data", "--console-address", ":9001"]
-    environment:
+    replicas: 1
+    resources:
+      memory: 512MiB
+      cpu: 1
+      cpuFraction: 20
+    cmd: ["server", "/data", "--console-address", ":9001"]
+    variables:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER_REDIRECT_URL: ${MINIO_PUBLIC_URL}
-    mounts:
-      - volume: minio-data
-        target: /data
     ports:
-      - target: 9000
-      - target: 9001
+      - 9000
+      - 9001
+    volumes:
+      - name: minio-data
+        mountPath: /data
 
   cf-qdrant:
     image: qdrant/qdrant:latest
-    restart: unless-stopped
-    mounts:
-      - volume: qdrant-storage
-        target: /qdrant/storage
+    replicas: 1
+    resources:
+      memory: 512MiB
+      cpu: 1
+      cpuFraction: 20
     ports:
-      - target: 6333
+      - 6333
+    volumes:
+      - name: qdrant-storage
+        mountPath: /qdrant/storage
 
   cf-directus:
     image: directus/directus:${DIRECTUS_VERSION}
-    restart: unless-stopped
-    depends_on:
-      - cf-postgres
-      - cf-redis
-      - cf-minio
-    environment:
+    replicas: 1
+    resources:
+      memory: 1024MiB
+      cpu: 1
+      cpuFraction: 20
+    ports:
+      - 8055
+    variables:
       KEY: ${DIRECTUS_SECRET}
       SECRET: ${DIRECTUS_SECRET}
       ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
@@ -166,7 +183,7 @@ containers:
       CORS_ORIGIN: ${DIRECTUS_CORS_ORIGIN}
       DB_CLIENT: pg
       DB_HOST: cf-postgres
-      DB_PORT: 5432
+      DB_PORT: "5432"
       DB_DATABASE: ${DIRECTUS_DB_NAME}
       DB_USER: ${DIRECTUS_DB_USER}
       DB_PASSWORD: ${DIRECTUS_DB_PASSWORD}
@@ -181,22 +198,22 @@ containers:
       STORAGE_MINIO_REGION: us-east-1
       STORAGE_MINIO_ENDPOINT: http://cf-minio:9000
       STORAGE_MINIO_FORCE_PATH_STYLE: "true"
-    mounts:
-      - volume: directus-uploads
-        target: /directus/uploads
-      - volume: directus-extensions
-        target: /directus/extensions
-    ports:
-      - target: 8055
+    volumes:
+      - name: directus-uploads
+        mountPath: /directus/uploads
+      - name: directus-extensions
+        mountPath: /directus/extensions
 
   cf-n8n:
     image: n8nio/n8n:${N8N_VERSION}
-    restart: unless-stopped
-    depends_on:
-      - cf-postgres
-      - cf-redis
-      - cf-directus
-    environment:
+    replicas: 1
+    resources:
+      memory: 1024MiB
+      cpu: 1
+      cpuFraction: 20
+    ports:
+      - 5678
+    variables:
       N8N_HOST: ${N8N_HOST}
       N8N_PORT: ${N8N_PORT}
       N8N_PROTOCOL: https
@@ -204,12 +221,12 @@ containers:
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: cf-postgres
-      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_PORT: "5432"
       DB_POSTGRESDB_DATABASE: ${N8N_DB_NAME}
       DB_POSTGRESDB_USER: ${N8N_DB_USER}
       DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD}
       QUEUE_BULL_REDIS_HOST: cf-redis
-      QUEUE_BULL_REDIS_PORT: 6379
+      QUEUE_BULL_REDIS_PORT: "6379"
       QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
       N8N_RUNNERS_ENABLED: "true"
       N8N_METRICS: "true"
@@ -221,33 +238,37 @@ containers:
       BITRIX_PUBLICATION_API_TOKEN: ${BITRIX_PUBLICATION_API_TOKEN}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_CONTENT_CHAT_ID: ${TELEGRAM_CONTENT_CHAT_ID}
-    mounts:
-      - volume: n8n-data
-        target: /home/node/.n8n
-    ports:
-      - target: 5678
+    volumes:
+      - name: n8n-data
+        mountPath: /home/node/.n8n
 
   cf-openwebui:
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
-    restart: unless-stopped
-    depends_on:
-      - cf-litellm
-    environment:
+    replicas: 1
+    resources:
+      memory: 1024MiB
+      cpu: 1
+      cpuFraction: 20
+    ports:
+      - 3000
+    variables:
       WEBUI_SECRET_KEY: ${OPENWEBUI_SECRET_KEY}
       OPENAI_API_BASE_URL: ${LITELLM_API_URL}
       OPENAI_API_KEY: ${LITELLM_API_KEY}
-    mounts:
-      - volume: openwebui-data
-        target: /app/backend/data
-    ports:
-      - target: 3000
+    volumes:
+      - name: openwebui-data
+        mountPath: /app/backend/data
 
   cf-litellm:
     image: ghcr.io/berriai/litellm:main-latest
-    restart: unless-stopped
-    depends_on:
-      - cf-postgres
-    environment:
+    replicas: 1
+    resources:
+      memory: 512MiB
+      cpu: 1
+      cpuFraction: 20
+    ports:
+      - 4000
+    variables:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       DATABASE_URL: postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@cf-postgres:5432/${LITELLM_DB_NAME}
       UI_USERNAME: ${LITELLM_UI_USERNAME}
@@ -257,37 +278,91 @@ containers:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GIGACHAT_API_KEY: ${GIGACHAT_API_KEY}
       YANDEXGPT_API_KEY: ${YANDEXGPT_API_KEY}
-    mounts:
-      - volume: litellm-data
-        target: /app/data
-    ports:
-      - target: 4000
+    volumes:
+      - name: litellm-data
+        mountPath: /app/data
 
   cf-uptime-kuma:
     image: louislam/uptime-kuma:latest
-    restart: unless-stopped
-    mounts:
-      - volume: uptime-kuma-data
-        target: /app/data
+    replicas: 1
+    resources:
+      memory: 256MiB
+      cpu: 1
+      cpuFraction: 20
     ports:
-      - target: 3001
+      - 3001
+    volumes:
+      - name: uptime-kuma-data
+        mountPath: /app/data
+
+network:
+  domains:
+    content-domain:
+      host: content.angstrem-mebel.ru
+    n8n-domain:
+      host: n8n-content.angstrem-mebel.ru
+    ai-domain:
+      host: ai-content.angstrem-mebel.ru
+    llm-domain:
+      host: llm-content.angstrem-mebel.ru
+    files-domain:
+      host: files-content.angstrem-mebel.ru
+    status-domain:
+      host: status-content.angstrem-mebel.ru
+
+  services:
+    directus-service:
+      container: cf-directus
+      ports:
+        - 8055
+    n8n-service:
+      container: cf-n8n
+      ports:
+        - 5678
+    openwebui-service:
+      container: cf-openwebui
+      ports:
+        - 3000
+    litellm-service:
+      container: cf-litellm
+      ports:
+        - 4000
+    minio-service:
+      container: cf-minio
+      ports:
+        - 9000
+    uptime-service:
+      container: cf-uptime-kuma
+      ports:
+        - 3001
 
 routes:
-  - host: content.angstrem-mebel.ru
-    container: cf-directus
+  directus-route:
+    domain: content-domain
+    service: directus-service
     port: 8055
-  - host: n8n-content.angstrem-mebel.ru
-    container: cf-n8n
+    path: /
+  n8n-route:
+    domain: n8n-domain
+    service: n8n-service
     port: 5678
-  - host: ai-content.angstrem-mebel.ru
-    container: cf-openwebui
+    path: /
+  openwebui-route:
+    domain: ai-domain
+    service: openwebui-service
     port: 3000
-  - host: llm-content.angstrem-mebel.ru
-    container: cf-litellm
+    path: /
+  litellm-route:
+    domain: llm-domain
+    service: litellm-service
     port: 4000
-  - host: files-content.angstrem-mebel.ru
-    container: cf-minio
+    path: /
+  minio-route:
+    domain: files-domain
+    service: minio-service
     port: 9000
-  - host: status-content.angstrem-mebel.ru
-    container: cf-uptime-kuma
+    path: /
+  uptime-route:
+    domain: status-domain
+    service: uptime-service
     port: 3001
