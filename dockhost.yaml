@@ -41,7 +41,7 @@ environment:
     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     GEMINI_API_KEY: ${GEMINI_API_KEY}
     GIGACHAT_API_KEY: ${GIGACHAT_API_KEY}
-    YANDEXGPT_API_KEY: ${YANDEXGPT_API_KEY}
+    YANDEXGPT_API_KEY: ${YANDEXGPT_API_KE
     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     MINIO_PORT: ${MINIO_PORT}
@@ -61,37 +61,37 @@ environment:
 volumes:
   postgres-data:
     type: ssd
-    size: 10Gib
+    size: 10GiB
   redis-data:
     type: ssd
-    size: 2Gib
+    size: 2GiB
   minio-data:
     type: ssd
-    size: 20Gib
+    size: 20GiB
   qdrant-storage:
     type: ssd
-    size: 10Gib
+    size: 10GiB
   directus-uploads:
     type: ssd
-    size: 10Gib
+    size: 10GiB
   directus-extensions:
     type: ssd
-    size: 1Gib
+    size: 1GiB
   n8n-data:
     type: ssd
-    size: 2Gib
+    size: 2GiB
   openwebui-data:
     type: ssd
-    size: 5Gib
+    size: 5GiB
   litellm-data:
     type: ssd
-    size: 2Gib
+    size: 2GiB
   uptime-kuma-data:
     type: ssd
-    size: 1Gib
+    size: 1GiB
   postgres-init:
     type: ssd
-    size: 1Gib
+    size: 1GiB
 
 containers:
   cf-postgres:
@@ -102,18 +102,18 @@ containers:
       cpu: 1
       cpuFraction: 20
     variables:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      DIRECTUS_DB_NAME: ${DIRECTUS_DB_NAME}
-      DIRECTUS_DB_USER: ${DIRECTUS_DB_USER}
-      DIRECTUS_DB_PASSWORD: ${DIRECTUS_DB_PASSWORD}
-      N8N_DB_NAME: ${N8N_DB_NAME}
-      N8N_DB_USER: ${N8N_DB_USER}
-      N8N_DB_PASSWORD: ${N8N_DB_PASSWORD}
-      LITELLM_DB_NAME: ${LITELLM_DB_NAME}
-      LITELLM_DB_USER: ${LITELLM_DB_USER}
-      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD}
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: $POSTGRES_DB
+      DIRECTUS_DB_NAME: $DIRECTUS_DB_NAME
+      DIRECTUS_DB_USER: $DIRECTUS_DB_USER
+      DIRECTUS_DB_PASSWORD: $DIRECTUS_DB_PASSWORD
+      N8N_DB_NAME: $N8N_DB_NAME
+      N8N_DB_USER: $N8N_DB_USER
+      N8N_DB_PASSWORD: $N8N_DB_PASSWORD
+      LITELLM_DB_NAME: $LITELLM_DB_NAME
+      LITELLM_DB_USER: $LITELLM_DB_USER
+      LITELLM_DB_PASSWORD: $LITELLM_DB_PASSWORD
     volumes:
       - name: postgres-data
         mountPath: /var/lib/postgresql/data
@@ -127,7 +127,12 @@ containers:
       memory: 256MiB
       cpu: 1
       cpuFraction: 20
-    cmd: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    cmd:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - $REDIS_PASSWORD
     volumes:
       - name: redis-data
         mountPath: /data
@@ -139,11 +144,15 @@ containers:
       memory: 512MiB
       cpu: 1
       cpuFraction: 20
-    cmd: ["server", "/data", "--console-address", ":9001"]
+    cmd:
+      - server
+      - /data
+      - --console-address
+      - :9001
     variables:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BROWSER_REDIRECT_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ROOT_USER: $MINIO_ROOT_USER
+      MINIO_ROOT_PASSWORD: $MINIO_ROOT_PASSWORD
+      MINIO_BROWSER_REDIRECT_URL: $MINIO_PUBLIC_URL
     ports:
       - 9000
       - 9001
@@ -165,7 +174,7 @@ containers:
         mountPath: /qdrant/storage
 
   cf-directus:
-    image: directus/directus:${DIRECTUS_VERSION}
+    image: directus/directus:$DIRECTUS_VERSION
     replicas: 1
     resources:
       memory: 1024MiB
@@ -174,30 +183,22 @@ containers:
     ports:
       - 8055
     variables:
-      KEY: ${DIRECTUS_SECRET}
-      SECRET: ${DIRECTUS_SECRET}
-      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
-      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL}
+      KEY: $DIRECTUS_SECRET
+      SECRET: $DIRECTUS_SECRET
+      ADMIN_EMAIL: $DIRECTUS_ADMIN_EMAIL
+      ADMIN_PASSWORD: $DIRECTUS_ADMIN_PASSWORD
+      PUBLIC_URL: $DIRECTUS_PUBLIC_URL
       CORS_ENABLED: "true"
-      CORS_ORIGIN: ${DIRECTUS_CORS_ORIGIN}
+      CORS_ORIGIN: $DIRECTUS_CORS_ORIGIN
       DB_CLIENT: pg
       DB_HOST: cf-postgres
       DB_PORT: "5432"
-      DB_DATABASE: ${DIRECTUS_DB_NAME}
-      DB_USER: ${DIRECTUS_DB_USER}
-      DB_PASSWORD: ${DIRECTUS_DB_PASSWORD}
+      DB_DATABASE: $DIRECTUS_DB_NAME
+      DB_USER: $DIRECTUS_DB_USER
+      DB_PASSWORD: $DIRECTUS_DB_PASSWORD
       REDIS_ENABLED: "true"
-      REDIS: redis://:${REDIS_PASSWORD}@cf-redis:6379
+      REDIS: redis://:$REDIS_PASSWORD@cf-redis:6379
       WEBSOCKETS_ENABLED: "true"
-      STORAGE_LOCATIONS: minio
-      STORAGE_MINIO_DRIVER: s3
-      STORAGE_MINIO_KEY: ${MINIO_ROOT_USER}
-      STORAGE_MINIO_SECRET: ${MINIO_ROOT_PASSWORD}
-      STORAGE_MINIO_BUCKET: directus
-      STORAGE_MINIO_REGION: us-east-1
-      STORAGE_MINIO_ENDPOINT: http://cf-minio:9000
-      STORAGE_MINIO_FORCE_PATH_STYLE: "true"
     volumes:
       - name: directus-uploads
         mountPath: /directus/uploads
@@ -205,7 +206,7 @@ containers:
         mountPath: /directus/extensions
 
   cf-n8n:
-    image: n8nio/n8n:${N8N_VERSION}
+    image: n8nio/n8n:$N8N_VERSION
     replicas: 1
     resources:
       memory: 1024MiB
@@ -214,36 +215,36 @@ containers:
     ports:
       - 5678
     variables:
-      N8N_HOST: ${N8N_HOST}
-      N8N_PORT: ${N8N_PORT}
+      N8N_HOST: $N8N_HOST
+      N8N_PORT: $N8N_PORT
       N8N_PROTOCOL: https
-      WEBHOOK_URL: ${N8N_WEBHOOK_URL}
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      WEBHOOK_URL: $N8N_WEBHOOK_URL
+      N8N_ENCRYPTION_KEY: $N8N_ENCRYPTION_KEY
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: cf-postgres
       DB_POSTGRESDB_PORT: "5432"
-      DB_POSTGRESDB_DATABASE: ${N8N_DB_NAME}
-      DB_POSTGRESDB_USER: ${N8N_DB_USER}
-      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD}
+      DB_POSTGRESDB_DATABASE: $N8N_DB_NAME
+      DB_POSTGRESDB_USER: $N8N_DB_USER
+      DB_POSTGRESDB_PASSWORD: $N8N_DB_PASSWORD
       QUEUE_BULL_REDIS_HOST: cf-redis
       QUEUE_BULL_REDIS_PORT: "6379"
-      QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      QUEUE_BULL_REDIS_PASSWORD: $REDIS_PASSWORD
       N8N_RUNNERS_ENABLED: "true"
       N8N_METRICS: "true"
-      DIRECTUS_API_URL: ${DIRECTUS_API_URL}
-      DIRECTUS_API_TOKEN: ${DIRECTUS_API_TOKEN}
-      LITELLM_API_URL: ${LITELLM_API_URL}
-      LITELLM_API_KEY: ${LITELLM_API_KEY}
-      BITRIX_PUBLICATION_API_URL: ${BITRIX_PUBLICATION_API_URL}
-      BITRIX_PUBLICATION_API_TOKEN: ${BITRIX_PUBLICATION_API_TOKEN}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CONTENT_CHAT_ID: ${TELEGRAM_CONTENT_CHAT_ID}
+      DIRECTUS_API_URL: $DIRECTUS_API_URL
+      DIRECTUS_API_TOKEN: $DIRECTUS_API_TOKEN
+      LITELLM_API_URL: $LITELLM_API_URL
+      LITELLM_API_KEY: $LITELLM_API_KEY
+      BITRIX_PUBLICATION_API_URL: $BITRIX_PUBLICATION_API_URL
+      BITRIX_PUBLICATION_API_TOKEN: $BITRIX_PUBLICATION_API_TOKEN
+      TELEGRAM_BOT_TOKEN: $TELEGRAM_BOT_TOKEN
+      TELEGRAM_CONTENT_CHAT_ID: $TELEGRAM_CONTENT_CHAT_ID
     volumes:
       - name: n8n-data
         mountPath: /home/node/.n8n
 
   cf-openwebui:
-    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    image: ghcr.io/open-webui/open-webui:$OPENWEBUI_VERSION
     replicas: 1
     resources:
       memory: 1024MiB
@@ -252,9 +253,9 @@ containers:
     ports:
       - 3000
     variables:
-      WEBUI_SECRET_KEY: ${OPENWEBUI_SECRET_KEY}
-      OPENAI_API_BASE_URL: ${LITELLM_API_URL}
-      OPENAI_API_KEY: ${LITELLM_API_KEY}
+      WEBUI_SECRET_KEY: $OPENWEBUI_SECRET_KEY
+      OPENAI_API_BASE_URL: $LITELLM_API_URL
+      OPENAI_API_KEY: $LITELLM_API_KEY
     volumes:
       - name: openwebui-data
         mountPath: /app/backend/data
@@ -269,15 +270,15 @@ containers:
     ports:
       - 4000
     variables:
-      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-      DATABASE_URL: postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@cf-postgres:5432/${LITELLM_DB_NAME}
-      UI_USERNAME: ${LITELLM_UI_USERNAME}
-      UI_PASSWORD: ${LITELLM_UI_PASSWORD}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GIGACHAT_API_KEY: ${GIGACHAT_API_KEY}
-      YANDEXGPT_API_KEY: ${YANDEXGPT_API_KEY}
+      LITELLM_MASTER_KEY: $LITELLM_MASTER_KEY
+      DATABASE_URL: postgresql://$LITELLM_DB_USER:$LITELLM_DB_PASSWORD@cf-postgres:5432/$LITELLM_DB_NAME
+      UI_USERNAME: $LITELLM_UI_USERNAME
+      UI_PASSWORD: $LITELLM_UI_PASSWORD
+      OPENAI_API_KEY: $OPENAI_API_KEY
+      ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+      GEMINI_API_KEY: $GEMINI_API_KEY
+      GIGACHAT_API_KEY: $GIGACHAT_API_KEY
+      YANDEXGPT_API_KEY: $YANDEXGPT_API_KEY
     volumes:
       - name: litellm-data
         mountPath: /app/data
@@ -336,33 +337,34 @@ network:
       ports:
         - 3001
 
-routes:
-  directus-route:
-    domain: content-domain
-    service: directus-service
-    port: 8055
-    path: /
-  n8n-route:
-    domain: n8n-domain
-    service: n8n-service
-    port: 5678
-    path: /
-  openwebui-route:
-    domain: ai-domain
-    service: openwebui-service
-    port: 3000
-    path: /
-  litellm-route:
-    domain: llm-domain
-    service: litellm-service
-    port: 4000
-    path: /
-  minio-route:
-    domain: files-domain
-    service: minio-service
-    port: 9000
-    path: /
-  uptime-route:
-    domain: status-domain
-    service: uptime-service
-    port: 3001
+  routes:
+    directus-route:
+      domain: content-domain
+      service: directus-service
+      port: 8055
+      path: /
+    n8n-route:
+      domain: n8n-domain
+      service: n8n-service
+      port: 5678
+      path: /
+    openwebui-route:
+      domain: ai-domain
+      service: openwebui-service
+      port: 3000
+      path: /
+    litellm-route:
+      domain: llm-domain
+      service: litellm-service
+      port: 4000
+      path: /
+    minio-route:
+      domain: files-domain
+      service: minio-service
+      port: 9000
+      path: /
+    uptime-route:
+      domain: status-domain
+      service: uptime-service
+      port: 3001
+  
