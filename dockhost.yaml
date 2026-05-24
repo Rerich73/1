@@ -59,17 +59,17 @@ environment:
     TELEGRAM_CONTENT_CHAT_ID: ${TELEGRAM_CONTENT_CHAT_ID}
 
 volumes:
-  postgres_data: {}
-  redis_data: {}
-  minio_data: {}
-  qdrant_storage: {}
-  directus_uploads: {}
-  directus_extensions: {}
-  n8n_data: {}
-  openwebui_data: {}
-  litellm_data: {}
-  uptime_kuma_data: {}
-  postgres_init: {}
+  postgres-data: {}
+  redis-data: {}
+  minio-data: {}
+  qdrant-storage: {}
+  directus-uploads: {}
+  directus-extensions: {}
+  n8n-data: {}
+  openwebui-data: {}
+  litellm-data: {}
+  uptime-kuma-data: {}
+  postgres-init: {}
 
 containers:
   cf_postgres:
@@ -89,9 +89,9 @@ containers:
       LITELLM_DB_USER: ${LITELLM_DB_USER}
       LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD}
     mounts:
-      - volume: postgres_data
+      - volume: postgres-data
         target: /var/lib/postgresql/data
-      - volume: postgres_init
+      - volume: postgres-init
         target: /docker-entrypoint-initdb.d
         read_only: true
 
@@ -100,7 +100,7 @@ containers:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     mounts:
-      - volume: redis_data
+      - volume: redis-data
         target: /data
 
   cf_minio:
@@ -112,7 +112,7 @@ containers:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER_REDIRECT_URL: ${MINIO_PUBLIC_URL}
     mounts:
-      - volume: minio_data
+      - volume: minio-data
         target: /data
     ports:
       - target: 9000
@@ -122,7 +122,7 @@ containers:
     image: qdrant/qdrant:latest
     restart: unless-stopped
     mounts:
-      - volume: qdrant_storage
+      - volume: qdrant-storage
         target: /qdrant/storage
     ports:
       - target: 6333
@@ -160,9 +160,9 @@ containers:
       STORAGE_MINIO_ENDPOINT: http://cf_minio:9000
       STORAGE_MINIO_FORCE_PATH_STYLE: "true"
     mounts:
-      - volume: directus_uploads
+      - volume: directus-uploads
         target: /directus/uploads
-      - volume: directus_extensions
+      - volume: directus-extensions
         target: /directus/extensions
     ports:
       - target: 8055
@@ -200,7 +200,7 @@ containers:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_CONTENT_CHAT_ID: ${TELEGRAM_CONTENT_CHAT_ID}
     mounts:
-      - volume: n8n_data
+      - volume: n8n-data
         target: /home/node/.n8n
     ports:
       - target: 5678
@@ -215,7 +215,7 @@ containers:
       OPENAI_API_BASE_URL: ${LITELLM_API_URL}
       OPENAI_API_KEY: ${LITELLM_API_KEY}
     mounts:
-      - volume: openwebui_data
+      - volume: openwebui-data
         target: /app/backend/data
     ports:
       - target: 3000
@@ -236,7 +236,7 @@ containers:
       GIGACHAT_API_KEY: ${GIGACHAT_API_KEY}
       YANDEXGPT_API_KEY: ${YANDEXGPT_API_KEY}
     mounts:
-      - volume: litellm_data
+      - volume: litellm-data
         target: /app/data
     ports:
       - target: 4000
@@ -245,7 +245,7 @@ containers:
     image: louislam/uptime-kuma:latest
     restart: unless-stopped
     mounts:
-      - volume: uptime_kuma_data
+      - volume: uptime-kuma-data
         target: /app/data
     ports:
       - target: 3001
