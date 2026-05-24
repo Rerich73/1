@@ -1,4 +1,4 @@
-version: 1
+﻿version: 1
 project: angstrem-content-factory
 description: Стартовый комплект конфигурации для развертывания контент-завода Ангстрем в Dockhost.
 
@@ -61,26 +61,37 @@ environment:
 volumes:
   postgres-data:
     type: volume
+    size: 10Gi
   redis-data:
     type: volume
+    size: 2Gi
   minio-data:
     type: volume
+    size: 20Gi
   qdrant-storage:
     type: volume
+    size: 10Gi
   directus-uploads:
     type: volume
+    size: 10Gi
   directus-extensions:
     type: volume
+    size: 1Gi
   n8n-data:
     type: volume
+    size: 2Gi
   openwebui-data:
     type: volume
+    size: 5Gi
   litellm-data:
     type: volume
+    size: 2Gi
   uptime-kuma-data:
     type: volume
+    size: 1Gi
   postgres-init:
     type: volume
+    size: 1Gi
 
 containers:
   cf-postgres:
